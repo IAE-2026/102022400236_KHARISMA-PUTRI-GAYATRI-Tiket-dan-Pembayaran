@@ -1,0 +1,42 @@
+"A datetime string with format `Y-m-d H:i:s`, e.g. `2018-05-23 13:43:32`."
+scalar DateTime @scalar(class: "Nuwave\\Lighthouse\\Schema\\Types\\Scalars\\DateTime")
+
+"Ticket travel booking entity."
+type Ticket {
+    id: ID!
+    cust_name: String! @rename(attribute: "Cust_Name")
+    route_id: Int!
+    seat_number: String!
+    status: String!
+    price: Float!
+    payment: Payment @hasOne
+    created_at: DateTime!
+    updated_at: DateTime!
+}
+
+"Payment entity linked to a ticket."
+type Payment {
+    id: ID!
+    ticket_id: Int!
+    amount: Float!
+    payment_method: String!
+    status: String!
+    payment_date: DateTime
+    created_at: DateTime!
+    updated_at: DateTime!
+}
+
+type Query {
+    "Daftar tiket terbaru (data real-time dari database)."
+    tickets(
+        status: String @eq
+    ): [Ticket!]! @all(model: "App\\Models\\Ticket", scopes: ["latestFirst"])
+
+    "Detail satu tiket berdasarkan ID."
+    ticket(id: ID! @eq): Ticket @find(model: "App\\Models\\Ticket")
+}
+
+type Subscription {
+    "Notifikasi real-time saat tiket baru dipesan."
+    ticketBooked: Ticket
+}

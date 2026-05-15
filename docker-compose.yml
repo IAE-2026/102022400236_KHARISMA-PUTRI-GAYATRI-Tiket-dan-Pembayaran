@@ -1,0 +1,69 @@
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: ticket-payment-service
+    container_name: ticket-app
+    restart: unless-stopped
+    working_dir: /var/www
+    volumes:
+      - ./:/var/www
+    environment:
+      APP_ENV: local
+      APP_DEBUG: "true"
+      DB_CONNECTION: pgsql
+      DB_HOST: db
+      DB_PORT: 5432
+      DB_DATABASE: ticket_service_db
+      DB_USERNAME: ticket_user
+      DB_PASSWORD: ticket_secret
+      LIGHTHOUSE_BROADCASTER: log
+      LIGHTHOUSE_SUBSCRIPTION_STORAGE: database
+      LIGHTHOUSE_QUEUE_BROADCASTS: "false"
+    networks:
+      - ticket-network
+    depends_on:
+      db:
+        condition: service_healthy
+
+  webserver:
+    image: nginx:alpine
+    container_name: ticket-webserver
+    restart: unless-stopped
+    ports:
+      - "8000:80"
+    volumes:
+      - ./:/var/www
+      - ./docker-config/nginx:/etc/nginx/conf.d/
+    networks:
+      - ticket-network
+    depends_on:
+      - app
+
+  db:
+    image: postgres:16-alpine
+    container_name: ticket-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ticket_service_db
+      POSTGRES_USER: ticket_user
+      POSTGRES_PASSWORD: ticket_secret
+    ports:
+      - "5432:5432"
+    volumes:
+      - ticket-pgdata:/var/lib/postgresql/data
+    networks:
+      - ticket-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ticket_user -d ticket_service_db"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+networks:
+  ticket-network:
+    driver: bridge
+
+volumes:
+  ticket-pgdata:

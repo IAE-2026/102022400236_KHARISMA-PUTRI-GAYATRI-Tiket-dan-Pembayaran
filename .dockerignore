@@ -1,0 +1,21 @@
+# Dependency directories
+node_modules
+vendor
+
+# OS generated files
+.DS_Store
+Thumbs.db
+
+# Laravel files
+.env
+.phpunit.result.cache
+storage/*.key
+
+# Git
+.git
+.gitignore
+
+# Docker files
+docker-config
+Dockerfile
+docker-compose.yml
