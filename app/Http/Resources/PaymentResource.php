@@ -15,6 +15,7 @@ class PaymentResource extends JsonResource
             'amount' => (float) $this->amount,
             'payment_method' => $this->payment_method,
             'status' => $this->status,
+            'soap_receipt_number' => $this->soap_receipt_number,
             'payment_date' => $this->payment_date?->toIso8601String(),
             'created_at' => $this->created_at?->toIso8601String(),
             'updated_at' => $this->updated_at?->toIso8601String(),

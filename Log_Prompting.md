@@ -1,80 +1,108 @@
-# 📝 Log Prompting & Diskusi Pengembangan Service
+# Log Prompting - Tugas 3 Service Tiket dan Pembayaran
 
-Dokumen ini mencatat rangkaian instruksi (prompt) dan proses pemecahan masalah sistematis dalam pengembangan **Service Tiket & Pembayaran** menggunakan bantuan AI Agent (Cursor & Gemini).
+## Identitas
 
----
+- Nama: Kharisma Putri Gayatri
+- NIM: 102022400236
+- Kelas: SI-48-09
+- Service: Tiket dan Pembayaran
 
-## 🚀 Fase 1: Inisialisasi & Konteks Tugas
+## Tujuan Prompting
 
-**Prompt 1: Penetapan Konteks**
-> "Saya baru saja memulai Tugas 2 Integrasi Aplikasi Perusahaan (IAE). Saya berperan sebagai pengembang service Tiket & Pembayaran dalam ekosistem Public Transport. Tugas saya adalah membangun service menggunakan Laravel yang wajib memiliki: Minimal 3 endpoint REST API fungsional, Keamanan menggunakan header X-IAE-KEY (NIM: 102022400236), Dokumentasi Swagger/OpenAPI (L5-Swagger), dan Implementasi GraphQL (Lighthouse). Bisakah kita berdiskusi mengenai langkah awal?"
+Log ini mencatat rangkaian interaksi dengan AI untuk: memahami kebutuhan tugas dari dokumen, memperbaiki environment Docker, mengimplementasikan SSO, SOAP Audit, RabbitMQ, serta menguji endpoint utama menggunakan Postman.
 
+Fokus pengujian diarahkan ke empat endpoint berikut:
 
----
+- `GET /api/v1/tickets`
+- `GET /api/v1/tickets/{id}`
+- `POST /api/v1/tickets/{id}/payments`
+- `POST /api/v1/tickets/{id}/send`
 
-## 🛠️ Fase 2: Troubleshooting Environment & Docker
+## Kronologi Prompting
 
-**Prompt 2: Migrasi Drive & File Permission**
-> "Saya mengalami error 'Permission Denied' saat menjalankan Docker di Drive C. Bagaimana cara memigrasikan proyek Laravel Docker saya ke Drive D:\ agar volume mapping WSL2 berjalan stabil, dan apa perintah Docker Compose untuk memastikan container 'ticket-app' menyala di environment baru tersebut?"
+### Prompt 1: Membedah Kebutuhan Tugas dari PDF
 
-**Prompt 3: Penanganan Error Docker Daemon**
-> "Docker saya error 'failed to connect to the docker API at npipe'. Bagaimana cara memastikan Docker Desktop dan engine WSL2 saya kembali sinkron agar perintah 'docker compose up' bisa berjalan kembali?"
+**Prompt:**
+> Baca PDF tugas di folder ini dong, tolong bantu breakdown detail dari Tugas 3 dan analisis error Docker aku yang dari tadi ga bisa di up.
 
----
+**Hasil:**
+Arsitektur yang harus diimplementasikan: Federated SSO, SOAP XML Client untuk audit, RabbitMQ Publisher untuk event-driven. AI juga mengingatkan bahwa `docker compose` harus dijalankan dari dalam folder `pemesanan-travel`.
 
-## 🔐 Fase 3: Pengembangan Backend & Keamanan
+### Prompt 2: Mengatasi Konflik Port dan File Compose pada Docker
 
-**Prompt 4: Implementasi 4 Endpoint Utama & Security**
-> "Bangun backend service menggunakan Laravel 11 + Docker dengan 4 endpoint inti: (1) GET /api/v1/tickets untuk riwayat, (2) GET /api/v1/tickets/{id} untuk detail, (3) POST /api/v1/tickets/{id}/payments untuk proses bayar, dan (4) POST /api/v1/tickets/{id}/send untuk e-ticket. Implementasikan middleware keamanan yang memvalidasi header 'X-IAE-KEY' bernilai '102022400236' dan pastikan semua response menggunakan format JSON seragam."
+**Prompt:**
+> Docker compose error nih, katanya config file nggak ketemu dan port 8000 udah kepake. Gimana cara benerinnya?
 
-**Prompt 5: Refactoring ke Service Pattern**
-> "Buatkan controller backend (TicketController), menggunakan Service Pattern agar logika pembayaran dan pengiriman e-ticket terpisah dari controller utama."
+**Hasil:**
+AI mendeteksi bahwa file compose ada di dalam sub-folder `pemesanan-travel` dan port `8000` masih dipakai oleh container lama. Docker setup diperbaiki menjadi tiga service: `ticket_webserver_container` (Nginx:8000), `ticket_app_container` (PHP-FPM), dan `ticket_db_container` (PostgreSQL:5432).
 
-**Prompt 6: Penyesuaian Endpoint Sesuai Kontrak**
-> "Saya ingin menyesuaikan endpoint API v1 saya menjadi: GET /api/v1/tickets, GET /api/v1/tickets/{id}, POST /api/v1/tickets/{id}/payments, dan POST /api/v1/tickets/{id}/send. Tolong sesuaikan routing dan controller agar sinkron."
+### Prompt 3: Mengatasi Error 504 Gateway Timeout
 
----
+**Prompt:**
+> Kok ada error 504 Gateway Time-out ya pas nyoba akses endpoint?
 
-## 📖 Fase 4: Dokumentasi API (Swagger)
+**Hasil:**
+Analisis log Nginx menunjukkan PHP-FPM terlalu lama menunggu respons dari SSO server pusat. AI membantu menambahkan konfigurasi timeout di Nginx (`docker-config/nginx/app.conf`) serta penanganan fallback HTTP pada pemanggilan SOAP (`app/Services/SOAPAuditService.php`) dan RabbitMQ (`app/Services/RabbitMQService.php`) agar request tidak menggantung jika jaringan sedang tidak stabil.
 
-**Prompt 7: Solusi Error @OA\Info**
-> "Saya mendapatkan error 'Required @OA\Info() not found' pada Swagger. Tolong buatkan kode isolasi metadata pada file 'app/Http/Controllers/SwaggerInfo.php' yang mencakup @OA\Info dan @OA\SecurityScheme tipe apiKey (header: X-IAE-KEY), agar dokumentasi terbaca sistem."
+### Prompt 4: Implementasi Middleware Federated SSO (JWT RS256)
 
-**Prompt 8: Integrasi Security di UI Swagger**
-> "Bagaimana cara memastikan fitur 'Authorize' di antarmuka web Swagger bisa digunakan untuk mengetes endpoint secara langsung? Saya ingin mencoba memasukkan NIM saya sebagai kunci akses di web tersebut."
+**Prompt:**
+> Endpoint Tugas 3 ini wajib pakai SSO Dosen. Tolong buatin dan bimbing cara menggunakan middleware JWT-nya di Laravel.
 
----
+**Hasil:**
+Dibuat middleware `VerifyFederatedJWT` yang:
+- Mengekstrak Bearer token dari header Authorization.
+- Mengunduh JWKS publik dari server SSO.
+- Mendaftarkan user dan role lokal berdasarkan `profile.email`.
 
-## 🧪 Fase 5: Pengujian & Validasi
+### Prompt 5: Error Token Expired & Malformed UTF-8
 
-**Prompt 9: Verifikasi Header Keamanan**
-> "Mengapa akses langsung via URL browser menghasilkan 'Unauthorized'? Tolong jelaskan cara cek header NIM tersebut melalui Swagger UI dan Postman agar saya yakin middleware sudah berjalan."
+**Prompt:**
+> Tokennya dibilang expired terus, malah muncul error Malformed UTF-8. Padahal ngerasa udah bener copynya.
 
-**Prompt 10: Pengujian End-to-End Tanpa Browser**
-> "Bantu saya melakukan pengecekan semua endpoint (GET, POST, PATCH) menggunakan Postman. Apa saja body JSON yang harus dikirim dan header apa yang wajib disertakan?"
+**Hasil:**
+AI menemukan adanya clock skew antara jam container Docker dengan server SSO pusat, serta copy-paste token yang tidak bersih di Postman. Solusi diterapkan dengan menambahkan `SSO_JWT_LEEWAY=28800` di `.env` dan memperbaiki format error agar lebih jelas ketika JWT salah.
 
----
+### Prompt 6: Sinkronisasi Environment Parameter Akun dan Team ID
 
-## 🧹 Fase 6: Finalisasi & Data Management
+**Prompt:**
+> Akun warga pengujianku itu warga37@ktp.iae.id dan API key-nya KEY-MHS-314. Tolong sesuaikan konfigurasinya tanpa merusak Team ID.
 
-**Prompt 11: Manajemen Data Dummy & Seeder**
-> "Bagaimana cara agar database saya bersih (empty state) saat masuk ke repo organisasi dosen, tapi file Seeder tetap tersedia jika sewaktu-waktu ingin melakukan demo pengisian data?"
+**Hasil:**
+File `.env` diperbarui dengan:
+```env
+TEAM_ID=TEAM-12
+SSO_API_KEY=KEY-MHS-314
+```
+Setelah reload konfigurasi, pengujian login SSO dengan akun `warga37@ktp.iae.id` berhasil membuka endpoint tiket.
 
-**Prompt 12: Pembersihan Database (Clean State)**
-> "Saya ingin menghapus data yang sudah ter-seed agar tidak masuk ke repository namun tetap bisa melakukan seeding kembali di masa depan."
+### Prompt 7: Integrasi Komunikasi SOAP Audit Server
 
+**Prompt:**
+> Pembayaran tiket kudu dikirim ke SOAP Audit Server sebagai bukti transaksi. Bantu bikin strukturnya.
 
----
+**Hasil:**
+Dibuat SOAPAuditService untuk membungkus payload transaksi ke dalam SOAP. Service ini juga berhasil menangkap ReceiptNumber dari respons server audit dan menyimpannya di database lokal.
 
-### **🛠️ Analisis Troubleshooting & Keputusan Teknis**
-* **Separation of Concerns:** Pemisahan metadata Swagger ke file khusus (`SwaggerInfo.php`) dilakukan untuk menghindari error parsing pada abstract class Laravel 11 dan menjaga kebersihan kode.
-* **Custom Middleware:** Penggunaan header `X-IAE-KEY` berbasis NIM memastikan service mematuhi kontrak integrasi tim dan aman dari akses ilegal.
-* **Environment Optimization:** Migrasi proyek ke Drive D dilakukan untuk mengatasi kendala *file permission* pada sistem Windows dan mengoptimalkan performa Docker.
-* **Data Sanitization:** Penggunaan `migrate:fresh` menjamin database dalam kondisi bersih saat dilakukan tahap penilaian oleh penguji.
+### Prompt 8: Publish Transaksi Sukses ke Broker RabbitMQ
 
-### **💡 Kesimpulan Log**
-Melalui rangkaian prompt di atas, pengembangan berhasil diselesaikan dengan standar profesional:
-1. **Backend:** Laravel 11 dengan *Service Pattern*.
-2. **Keamanan:** Validasi Header NIM.
-3. **DevOps:** Dockerized environment yang stabil.
-4. **Dokumentasi:** Swagger UI interaktif & Skema GraphQL.
+**Prompt:**
+> Gimana caranya biar pas pembayaran sukses, service kita langsung publish event ke RabbitMQ?
+
+**Hasil:**
+Dibangun RabbitMQService untuk mengirim payload JSON ke exchange iae.central.exchange dengan routing key ticket.payment.completed. Fitur ini dilengkapi fallback HTTP jika port AMQP 5672 tiba-tiba tidak dapat diakses.
+
+### Prompt 9: Penyusunan Skenario Uji Coba Final di Postman
+
+**Prompt:**
+> Semua fitur udah selesai dicoding, tolong buatin urutan testing yang bener di Postman buat mastiin gak ada yang skip.
+
+**Hasil:**
+AI menyusun urutan pengujian yang logis:
+1. Login SSO → ambil token
+2. `GET /api/v1/tickets`
+3. `GET /api/v1/tickets/{id}`
+4. `POST /api/v1/tickets/{id}/payments`
+5. `POST /api/v1/tickets/{id}/send`
+
+AI juga menekankan bahwa data tiket bisa diambil dari seeder lokal sehingga tidak perlu input manual.

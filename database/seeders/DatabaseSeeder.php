@@ -15,7 +15,9 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
-        // User::factory(10)->create();
+        // Seed default roles
+        \App\Models\Role::firstOrCreate(['name' => 'warga']);
+        \App\Models\Role::firstOrCreate(['name' => 'admin']);
 
         $this->call(TicketSeeder::class);
     }

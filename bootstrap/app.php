@@ -13,7 +13,8 @@ return Application::configure(basePath: dirname(__DIR__))
     )
     ->withMiddleware(function (Middleware $middleware): void {
         $middleware->alias([
-                'iae.auth' => App\Http\Middleware\IAEkey::class,
+            'iae.auth' => App\Http\Middleware\IAEkey::class,
+            'sso.auth' => App\Http\Middleware\VerifyFederatedJWT::class,
         ]); 
     })
     ->withExceptions(function (Exceptions $exceptions): void {

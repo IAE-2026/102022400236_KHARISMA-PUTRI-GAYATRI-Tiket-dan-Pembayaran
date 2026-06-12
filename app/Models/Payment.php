@@ -12,6 +12,7 @@ class Payment extends Model
         'amount',
         'payment_method',
         'status',
+        'soap_receipt_number',
         'payment_date',
     ];
 
