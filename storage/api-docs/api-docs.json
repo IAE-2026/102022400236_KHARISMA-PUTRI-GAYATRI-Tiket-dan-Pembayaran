@@ -591,7 +591,7 @@
         "securitySchemes": {
             "IAEKey": {
                 "type": "apiKey",
-                "description": "Kunci integrasi EAI - hanya NIM 102022400236 yang diterima. Nilai lain akan mendapat HTTP 401.",
+                "description": "Kunci integrasi EAI - hanya NIM 102022400236 yang diterima.",
                 "name": "X-IAE-KEY",
                 "in": "header"
             }
