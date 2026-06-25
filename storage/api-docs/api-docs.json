@@ -84,6 +84,107 @@
                         "IAEKey": []
                     }
                 ]
+            },
+            "post": {
+                "tags": [
+                    "Tickets"
+                ],
+                "summary": "Buat pesanan tiket baru",
+                "operationId": "createTicket",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "cust_name",
+                                    "route_id",
+                                    "seat_number",
+                                    "price",
+                                    "payment_method"
+                                ],
+                                "properties": {
+                                    "cust_name": {
+                                        "type": "string",
+                                        "example": "Budi Santoso"
+                                    },
+                                    "route_id": {
+                                        "type": "integer",
+                                        "example": 1
+                                    },
+                                    "seat_number": {
+                                        "type": "string",
+                                        "example": "A12"
+                                    },
+                                    "price": {
+                                        "type": "number",
+                                        "format": "float",
+                                        "example": 150000
+                                    },
+                                    "payment_method": {
+                                        "type": "string",
+                                        "example": "QRIS",
+                                        "enum": [
+                                            "credit_card",
+                                            "bank_transfer",
+                                            "QRIS"
+                                        ]
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Tiket berhasil dibuat",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "allOf": [
+                                        {
+                                            "$ref": "#/components/schemas/ApiSuccess"
+                                        },
+                                        {
+                                            "properties": {
+                                                "data": {
+                                                    "$ref": "#/components/schemas/TicketData"
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ApiError"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ApiError"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "IAEKey": []
+                    }
+                ]
             }
         },
         "/api/v1/tickets/{id}": {
@@ -365,6 +466,10 @@
                     "data": {
                         "example": null,
                         "nullable": true
+                    },
+                    "errors": {
+                        "example": null,
+                        "nullable": true
                     }
                 },
                 "type": "object"
@@ -486,7 +591,7 @@
         "securitySchemes": {
             "IAEKey": {
                 "type": "apiKey",
-                "description": "Kunci integrasi EAI - masukkan NIM: 102022400236 lalu klik Authorize",
+                "description": "Kunci integrasi EAI - hanya NIM 102022400236 yang diterima. Nilai lain akan mendapat HTTP 401.",
                 "name": "X-IAE-KEY",
                 "in": "header"
             }

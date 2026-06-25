@@ -20,7 +20,7 @@ namespace App\Http\Controllers;
  *     type="apiKey",
  *     in="header",
  *     name="X-IAE-KEY",
- *     description="Kunci integrasi EAI - masukkan NIM: 102022400236 lalu klik Authorize"
+ *     description="Kunci integrasi EAI - hanya NIM 102022400236 yang diterima."
  * )
  *
  * @OA\Tag(name="Tickets", description="Siklus hidup tiket: listing, detail, pembayaran, e-ticket")
@@ -38,7 +38,8 @@ namespace App\Http\Controllers;
  *     type="object",
  *     @OA\Property(property="status", type="string", example="error"),
  *     @OA\Property(property="message", type="string"),
- *     @OA\Property(property="data", nullable=true, example=null)
+ *     @OA\Property(property="data", nullable=true, example=null),
+ *     @OA\Property(property="errors", nullable=true, example=null)
  * )
  *
  * @OA\Schema(
@@ -96,6 +97,37 @@ namespace App\Http\Controllers;
  *         )
  *     ),
  *     @OA\Response(response=401, description="Unauthorized", @OA\JsonContent(ref="#/components/schemas/ApiError"))
+ * )
+ *
+ * @OA\Post(
+ *     path="/api/v1/tickets",
+ *     operationId="createTicket",
+ *     tags={"Tickets"},
+ *     summary="Buat pesanan tiket baru",
+ *     security={{"IAEKey":{}}},
+ *     @OA\RequestBody(
+ *         required=true,
+ *         @OA\JsonContent(
+ *             required={"cust_name","route_id","seat_number","price","payment_method"},
+ *             @OA\Property(property="cust_name", type="string", example="Budi Santoso"),
+ *             @OA\Property(property="route_id", type="integer", example=1),
+ *             @OA\Property(property="seat_number", type="string", example="A12"),
+ *             @OA\Property(property="price", type="number", format="float", example=150000),
+ *             @OA\Property(property="payment_method", type="string", enum={"credit_card","bank_transfer","QRIS"}, example="QRIS")
+ *         )
+ *     ),
+ *     @OA\Response(
+ *         response=201,
+ *         description="Tiket berhasil dibuat",
+ *         @OA\JsonContent(
+ *             allOf={
+ *                 @OA\Schema(ref="#/components/schemas/ApiSuccess"),
+ *                 @OA\Schema(@OA\Property(property="data", ref="#/components/schemas/TicketData"))
+ *             }
+ *         )
+ *     ),
+ *     @OA\Response(response=401, description="Unauthorized", @OA\JsonContent(ref="#/components/schemas/ApiError")),
+ *     @OA\Response(response=422, description="Validation error", @OA\JsonContent(ref="#/components/schemas/ApiError"))
  * )
  *
  * @OA\Get(

@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Http\Resources\PaymentResource;
 use App\Models\Ticket;
 use App\Support\ApiResponse;
 use Illuminate\Http\Exceptions\HttpResponseException;
@@ -32,8 +33,8 @@ class ETicketService
             'route_id' => $ticket->route_id,
             'seat_number' => $ticket->seat_number,
             'price' => (float) $ticket->price,
-            'payment_status' => $ticket->payment->status,
             'issued_at' => now()->toIso8601String(),
+            'payment' => PaymentResource::make($ticket->payment),
         ];
     }
 

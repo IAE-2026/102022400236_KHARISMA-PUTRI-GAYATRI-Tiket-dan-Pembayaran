@@ -12,15 +12,16 @@ services:
     environment:
       APP_ENV: local
       APP_DEBUG: "true"
-      DB_CONNECTION: pgsql
+      DB_CONNECTION: mysql
       DB_HOST: db
-      DB_PORT: 5432
+      DB_PORT: 3306
       DB_DATABASE: ticket_service_db
       DB_USERNAME: ticket_user
       DB_PASSWORD: ticket_secret
       LIGHTHOUSE_BROADCASTER: log
       LIGHTHOUSE_SUBSCRIPTION_STORAGE: database
       LIGHTHOUSE_QUEUE_BROADCASTS: "false"
+      LIGHTHOUSE_QUERY_CACHE_ENABLE: "false"
     networks:
       - ticket-network
     depends_on:
@@ -42,21 +43,22 @@ services:
       - app
 
   db:
-    image: postgres:16-alpine
+    image: mysql:8.0
     container_name: ticket-db
     restart: unless-stopped
     environment:
-      POSTGRES_DB: ticket_service_db
-      POSTGRES_USER: ticket_user
-      POSTGRES_PASSWORD: ticket_secret
+      MYSQL_ROOT_PASSWORD: root_secret
+      MYSQL_DATABASE: ticket_service_db
+      MYSQL_USER: ticket_user
+      MYSQL_PASSWORD: ticket_secret
     ports:
-      - "5432:5432"
+      - "3306:3306"
     volumes:
-      - ticket-pgdata:/var/lib/postgresql/data
+      - ticket-mysqldata:/var/lib/mysql
     networks:
       - ticket-network
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ticket_user -d ticket_service_db"]
+      test: ["CMD-SHELL", "mysqladmin ping -h localhost -u ticket_user -pticket_secret"]
       interval: 5s
       timeout: 5s
       retries: 10
@@ -66,4 +68,4 @@ networks:
     driver: bridge
 
 volumes:
-  ticket-pgdata:
+  ticket-mysqldata:

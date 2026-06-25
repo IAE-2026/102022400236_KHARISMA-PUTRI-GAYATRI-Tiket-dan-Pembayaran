@@ -4,8 +4,10 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\ProcessPaymentRequest;
+use App\Http\Requests\StoreTicketRequest;
 use App\Http\Resources\PaymentResource;
 use App\Http\Resources\TicketResource;
+use App\Models\Payment;
 use App\Models\Ticket;
 use App\Services\ETicketService;
 use App\Services\PaymentService;
@@ -35,6 +37,32 @@ class TicketController extends Controller
         return ApiResponse::success(
             TicketResource::collection($tickets)->response()->getData(true),
             'Ticket list retrieved successfully'
+        );
+    }
+
+    public function store(StoreTicketRequest $request): JsonResponse
+    {
+        $ticket = Ticket::query()->create([
+            'Cust_Name'   => $request->string('cust_name')->toString(),
+            'route_id'    => $request->integer('route_id'),
+            'seat_number' => $request->string('seat_number')->toString(),
+            'status'      => 'booked',
+            'price'       => $request->input('price'),
+        ]);
+
+        Payment::query()->create([
+            'ticket_id'      => $ticket->id,
+            'amount'         => $request->input('price'),
+            'payment_method' => $request->input('payment_method'),
+            'status'         => 'pending',
+        ]);
+
+        $ticket->load('payment');
+
+        return ApiResponse::success(
+            new TicketResource($ticket),
+            'Ticket created successfully',
+            201
         );
     }
 

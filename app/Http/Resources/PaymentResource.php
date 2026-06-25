@@ -15,9 +15,9 @@ class PaymentResource extends JsonResource
             'amount' => (float) $this->amount,
             'payment_method' => $this->payment_method,
             'status' => $this->status,
-            'payment_date' => $this->payment_date?->toIso8601String(),
-            'created_at' => $this->created_at?->toIso8601String(),
-            'updated_at' => $this->updated_at?->toIso8601String(),
+            'payment_date' => $this->payment_date?->format('Y-m-d H:i:s'),
+            'created_at' => $this->created_at->format('Y-m-d H:i:s'),
+            'updated_at' => $this->updated_at->format('Y-m-d H:i:s'),
         ];
     }
 }

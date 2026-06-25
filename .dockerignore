@@ -16,6 +16,6 @@ storage/*.key
 .gitignore
 
 # Docker files
-docker-config
-Dockerfile
-docker-compose.yml
+# docker-config
+# Dockerfile
+# docker-compose.yml

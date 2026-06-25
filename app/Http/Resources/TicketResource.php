@@ -17,8 +17,8 @@ class TicketResource extends JsonResource
             'status' => $this->status,
             'price' => (float) $this->price,
             'payment' => PaymentResource::make($this->whenLoaded('payment')),
-            'created_at' => $this->created_at?->toIso8601String(),
-            'updated_at' => $this->updated_at?->toIso8601String(),
+            'created_at' => $this->created_at->format('Y-m-d H:i:s'),
+            'updated_at' => $this->updated_at->format('Y-m-d H:i:s'),
         ];
     }
 }
